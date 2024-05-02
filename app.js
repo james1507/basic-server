@@ -4,7 +4,8 @@ var path = require("path");
 var cookieParser = require("cookie-parser");
 var logger = require("morgan");
 const cors = require("cors");
-const errorHandler = require("./src/helpers/errorHandler");
+const errorHandler = require("./src/helpers/error_handler");
+const config = require("./config.json");
 
 var indexRouter = require("./src/routes/index");
 var usersRouter = require("./src/routes/user.controllers");
@@ -39,5 +40,7 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-app.listen(5001, () => console.log(`Server is listening on PORT: 5001`));
+app.listen(config.port, () =>
+  console.log(`Server is listening on PORT: ${config.port}`)
+);
 module.exports = app;

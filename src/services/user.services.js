@@ -78,7 +78,6 @@ async function create(userParam) {
     newUser.password = bcrypt.hashSync(userParam.password, 10);
   }
 
-  // Save the user to the database
   await newUser.save();
 
   // Generate token
@@ -86,12 +85,20 @@ async function create(userParam) {
     { sub: newUser.id, role: newUser.role },
     config.secret,
     {
+      expiresIn: "15m",
+    }
+  );
+
+  const refreshToken = jwt.sign(
+    { sub: newUser.id, role: newUser.role },
+    config.refreshSecret,
+    {
       expiresIn: "7d",
     }
   );
 
   // Return the newly created user object along with the token
-  return { ...newUser.toObject(), token };
+  return { ...newUser.toJSON(), token, refreshToken };
 }
 
 async function update(id, userParam) {

@@ -1,5 +1,6 @@
 {
-  "connectionString": "mongodb+srv://connectwithan:M5H9sdtkLoopD32g@cluster0.7qsjbk3.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+  "connectionString": "mongodb+srv://connectwithan:M5H9sdtkLoopD32g@cluster0.7qsjbk3.mongodb.net/basicServer?retryWrites=true&w=majority&appName=Cluster0",
   "secret": "connectwithan-token",
-  "refreshSecret": "connectwithan-refresh"
+  "refreshSecret": "connectwithan-refresh",
+  "port": "5001"
 }

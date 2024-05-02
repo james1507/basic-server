@@ -8,7 +8,6 @@ const schema = new Schema({
   password: { type: String, required: true },
   role: { type: String, required: true },
   createdDate: { type: Date, default: Date.now },
-  token: { type: String, required: true },
 });
 
 schema.set("toJSON", {

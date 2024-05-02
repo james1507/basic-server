@@ -12,7 +12,7 @@ try {
       process.env.MONGODB_URI || config.connectionString,
       conenctionOptions
     )
-    .then((res) => console.log(`MOngoDB connected Successfully..!`));
+    .then((res) => console.log(`MongoDB connected Successfully..!`));
 } catch (error) {
   console.log(`MongoDB Error: `, error.message);
   process.exit(1);
