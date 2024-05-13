@@ -14,7 +14,7 @@ var app = express();
 
 // view engine setup
 app.set("views", path.join(__dirname, "./src/views"));
-app.set("view engine", "jade");
+app.set("view engine", "ejs");
 
 app.use(logger("dev"));
 app.use(express.json());
@@ -40,7 +40,7 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-app.listen(config.port, () =>
-  console.log(`Server is listening on PORT: ${config.port}`)
-);
+// app.listen(config.port, () =>
+//   console.log(`Server is listening on PORT: ${config.port}`)
+// );
 module.exports = app;
