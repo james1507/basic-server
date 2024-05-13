@@ -7,6 +7,7 @@ const jwt = require("../helpers/jwt");
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
 router.post("/register", register);
+router.post("/social-login", socialLogin);
 router.get("/", jwt(Role.Admin), getAll);
 router.get("/current", jwt(), getCurrent);
 router.get("/:id", getById);
@@ -54,6 +55,45 @@ function register(req, res, next) {
       });
     })
     .catch((error) => next(error));
+}
+
+async function socialLogin(req, res, next) {
+  try {
+    const {
+      firstName,
+      lastName,
+      email,
+      socialType,
+      socialAuthId,
+      socialToken,
+    } = req.body;
+
+    // Check if email exists
+    const existingUser = await userServices.getByEmail(email);
+    if (existingUser) {
+      return res.status(400).json({ message: "Email is already registered" });
+    }
+
+    // Authenticate social credentials
+    const user = await userServices.socialLogin({
+      firstName,
+      lastName,
+      email,
+      socialType,
+      socialAuthId,
+      socialToken,
+    });
+    if (!user) {
+      return res.status(400).json({ message: "Social authentication failed" });
+    }
+
+    return res.json({
+      user,
+      message: "User logged in successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
 }
 
 function getAll(req, res, next) {
