@@ -37,14 +37,11 @@ async function socialLogin({
   socialAuthId,
   socialToken,
 }) {
-  // Check if the email exists in the User collection
-  let user = await User.findOne({ email });
-
   // Check if the email exists in the SocialUser collection
   let socialUser = await SocialUser.findOne({ email });
 
-  if (!user && !socialUser) {
-    // Create a new user if the email does not exist in either collection
+  if (!socialUser) {
+    // If email does not exist, create a new user
     socialUser = new SocialUser({
       firstName,
       lastName,
@@ -55,20 +52,21 @@ async function socialLogin({
       role: "User",
     });
     await socialUser.save();
-  } else if (!user && socialUser) {
-    // Update socialUser with the provided socialAuthId if email exists in the SocialUser collection
-    socialUser.socialAuthId = socialAuthId;
-    socialUser.socialToken = socialToken;
-    await socialUser.save();
+  } else {
+    // If email exists, check if socialAuthId and socialToken match
+    if (
+      socialUser.socialAuthId !== socialAuthId ||
+      socialUser.socialToken !== socialToken
+    ) {
+      throw new Error("Social authentication failed. Please try again.");
+    }
   }
 
   // Generate tokens
   const token = jwt.sign(
     { sub: socialUser.id, role: socialUser.role },
     config.secret,
-    {
-      expiresIn: "15m",
-    }
+    { expiresIn: "15m" }
   );
   const refreshToken = jwt.sign(
     { sub: socialUser.id, role: socialUser.role },
