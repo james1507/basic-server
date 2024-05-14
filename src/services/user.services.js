@@ -3,7 +3,6 @@ const bcrypt = require("bcryptjs");
 const config = require("../../config.json");
 const db = require("../helpers/db");
 const User = db.User;
-const SocialUser = db.SocialUser;
 
 //this will authenticate the user credentials
 async function login({ email, password }) {
@@ -38,11 +37,11 @@ async function socialLogin({
   socialToken,
 }) {
   // Check if the email exists in the SocialUser collection
-  let socialUser = await SocialUser.findOne({ email });
+  let socialUser = await User.findOne({ email });
 
   if (!socialUser) {
     // If email does not exist, create a new user
-    socialUser = new SocialUser({
+    socialUser = new User({
       firstName,
       lastName,
       email,
