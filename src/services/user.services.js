@@ -30,8 +30,61 @@ async function login({ email, password }) {
   }
 }
 
+async function socialLogin(req) {
+  const { socialType, socialAuthId } = req.body;
+
+  let userInfo;
+  if (socialType === "google") {
+    userInfo = await verifyGoogleToken(socialAuthId);
+  } else if (socialType === "facebook") {
+    userInfo = await verifyFacebookToken(socialAuthId);
+  } else {
+    throw new Error("Unsupported social type");
+  }
+
+  const { email, firstName, lastName, socialToken } = userInfo;
+
+  // Check if email exists
+  let user = await getByEmail(email);
+
+  if (!user) {
+    // If email does not exist, create a new user
+    user = new User({
+      email,
+      firstName,
+      lastName,
+      socialType,
+      socialAuthId,
+      socialToken,
+      role: "User",
+    });
+    await user.save();
+  } else {
+    // If user exists, update the social tokens and other info
+    user.socialType = socialType;
+    user.socialAuthId = socialAuthId;
+    user.socialToken = socialToken;
+    await user.save();
+  }
+
+  // Generate tokens
+  const token = jwt.sign({ sub: user.id, role: user.role }, config.secret, {
+    expiresIn: "15m",
+  });
+  const refreshToken = jwt.sign(
+    { sub: user.id, role: user.role },
+    config.refreshSecret,
+    {
+      expiresIn: "7d",
+    }
+  );
+
+  return { ...user.toJSON(), token, refreshToken };
+}
+
 async function verifyGoogleToken(idToken) {
   try {
+    console.log("im here success");
     const decodedToken = await admin.auth().verifyIdToken(idToken);
     return {
       email: decodedToken.email,
@@ -42,9 +95,10 @@ async function verifyGoogleToken(idToken) {
       socialToken: idToken,
     };
   } catch (error) {
-    console.log("erorr: ", error);
+    console.log("im here error");
+    console.log("error: ", error);
 
-    throw new Error("Invalid Google ID token ", error);
+    throw new Error("Invalid Google ID token");
   }
 }
 
@@ -193,5 +247,6 @@ module.exports = {
   delete: _delete,
   verifyGoogleToken,
   verifyFacebookToken,
+  socialLogin,
   getByEmail,
 };

@@ -10,8 +10,6 @@ const config = require("./config.json");
 var indexRouter = require("./src/routes/index");
 var usersRouter = require("./src/routes/user.controllers");
 
-const admin = require("./firebase");
-
 var app = express();
 
 // view engine setup
