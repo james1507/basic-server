@@ -40,7 +40,7 @@ app.use(function (err, req, res, next) {
   res.render("error");
 });
 
-app.listen(config.port, () =>
-  console.log(`Server is listening on PORT: ${config.port}`)
-);
+app.listen(config.port, () => {
+  console.log(`Server is listening on PORT: ${config.port}`);
+});
 module.exports = app;
