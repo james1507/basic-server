@@ -41,6 +41,7 @@ app.use(function (err, req, res, next) {
 });
 
 app.listen(process.env.PORT, () => {
+  console.log("test");
   console.log(`Server is listening on PORT: ${process.env.PORT}`);
 });
 module.exports = app;
