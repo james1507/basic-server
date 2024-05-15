@@ -1,6 +1,6 @@
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const config = require("../../config.json");
 const db = require("../helpers/db");
 const fetch = require("node-fetch");
 const User = db.User;
@@ -14,13 +14,17 @@ async function login({ email, password }) {
   console.log("user model", user);
   //if user is truthy then sign the token
   if (user && bcrypt.compareSync(password, user.password)) {
-    const token = jwt.sign({ sub: user.id, role: user.role }, config.secret, {
-      expiresIn: "15m",
-    });
+    const token = jwt.sign(
+      { sub: user.id, role: user.role },
+      process.env.SECRET,
+      {
+        expiresIn: "15m",
+      }
+    );
 
     const refreshToken = jwt.sign(
       { sub: user.id, role: user.role },
-      config.refreshSecret,
+      process.env.REFRESH_SECRET,
       {
         expiresIn: "7d",
       }
@@ -68,12 +72,16 @@ async function socialLogin(req) {
   }
 
   // Generate tokens
-  const token = jwt.sign({ sub: user.id, role: user.role }, config.secret, {
-    expiresIn: "15m",
-  });
+  const token = jwt.sign(
+    { sub: user.id, role: user.role },
+    process.env.SECRET,
+    {
+      expiresIn: "15m",
+    }
+  );
   const refreshToken = jwt.sign(
     { sub: user.id, role: user.role },
-    config.refreshSecret,
+    process.env.REFRESH_SECRET,
     {
       expiresIn: "7d",
     }
@@ -103,8 +111,8 @@ async function verifyGoogleToken(idToken) {
 }
 
 async function verifyFacebookToken(accessToken) {
-  const appId = config.facebookAppId;
-  const appSecret = config.facebookAppSecret;
+  const appId = process.env.FACEBOOK_APP_ID;
+  const appSecret = process.env.FACEBOOK_APP_SECRET;
 
   const debugTokenUrl = `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${appId}|${appSecret}`;
   const response = await fetch(debugTokenUrl);
@@ -141,7 +149,7 @@ async function getByEmail(email) {
 async function refreshToken({ refreshToken }) {
   try {
     // Verify the refresh token
-    const decoded = jwt.verify(refreshToken, config.refreshSecret);
+    const decoded = jwt.verify(refreshToken, process.env.REFRESH_SECRET);
 
     // Find the user by refresh token
     const user = await User.findOne({ _id: decoded.sub, refreshToken });
@@ -153,7 +161,7 @@ async function refreshToken({ refreshToken }) {
     // Generate a new access token
     const accessToken = jwt.sign(
       { sub: user.id, role: user.role },
-      config.secret,
+      process.env.SECRET,
       { expiresIn: "15m" }
     );
 
@@ -192,7 +200,7 @@ async function create(userParam) {
   // Generate token
   const token = jwt.sign(
     { sub: newUser.id, role: newUser.role },
-    config.secret,
+    process.env.SECRET,
     {
       expiresIn: "15m",
     }
@@ -200,7 +208,7 @@ async function create(userParam) {
 
   const refreshToken = jwt.sign(
     { sub: newUser.id, role: newUser.role },
-    config.refreshSecret,
+    process.env.REFRESH_SECRET,
     {
       expiresIn: "7d",
     }

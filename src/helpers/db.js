@@ -1,4 +1,4 @@
-const config = require("../../config.json");
+require("dotenv").config();
 const mongoose = require("mongoose");
 const conenctionOptions = {
   useCreateIndex: true,
@@ -8,10 +8,7 @@ const conenctionOptions = {
 };
 try {
   mongoose
-    .connect(
-      process.env.MONGODB_URI || config.connectionString,
-      conenctionOptions
-    )
+    .connect(process.env.MONGODB_URI, conenctionOptions)
     .then((res) => console.log(`MongoDB connected Successfully..!`));
 } catch (error) {
   console.log(`MongoDB Error: `, error.message);

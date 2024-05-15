@@ -1,5 +1,5 @@
+require("dotenv").config();
 const expressJwt = require("express-jwt");
-const config = require("../../config.json");
 const db = require("../helpers/db");
 //const userService = require("../services/user.services");
 
@@ -41,7 +41,7 @@ function jwt(roles = []) {
     roles = [roles];
     console.log(roles);
   }
-  const secret = config.secret;
+  const secret = process.env.SECRET;
   return [
     // authenticate JWT token and attach user to request object (req.user)
     expressJwt({ secret, algorithms: ["HS256"] }),

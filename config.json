@@ -1,9 +1,0 @@
-{
-  "connectionString": "mongodb+srv://connectwithan:M5H9sdtkLoopD32g@cluster0.7qsjbk3.mongodb.net/basicServer?retryWrites=true&w=majority&appName=Cluster0",
-  "secret": "connectwithan-token",
-  "refreshSecret": "connectwithan-refresh",
-  "googleClientId": "1005051054431-n4iiag4r836s806jicceltddt06prtco.apps.googleusercontent.com",
-  "facebookAppId": "1546605619620282",
-  "facebookAppSecret": "2aa76384decd46fd82d9e4c39488e393",
-  "port": "3000"
-}

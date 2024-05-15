@@ -3,9 +3,6 @@ const router = express.Router();
 const userServices = require("../services/user.services");
 const Role = require("../helpers/role");
 const jwt = require("../helpers/jwt");
-const jwtWeb = require("jsonwebtoken");
-const User = require("../models/user");
-const config = require("../../config.json");
 //routes
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
