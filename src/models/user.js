@@ -3,14 +3,14 @@ const Schema = mongoose.Schema;
 
 const schema = new Schema({
   email: { type: String, unique: true, required: true },
-  firstName: { type: String, required: true },
-  lastName: { type: String, required: true },
+  firstName: { type: String },
+  lastName: { type: String },
   password: { type: String },
   role: { type: String, required: true },
   createdDate: { type: Date, default: Date.now },
-  socialType: { type: String, required: true },
-  socialAuthId: { type: String, required: true },
-  socialToken: { type: String, required: true },
+  socialType: { type: String },
+  socialAuthId: { type: String },
+  socialToken: { type: String },
 });
 
 schema.set("toJSON", {
