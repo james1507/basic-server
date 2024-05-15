@@ -35,18 +35,18 @@ async function login({ email, password }) {
 }
 
 async function socialLogin(req) {
-  const { socialType, socialAuthId } = req.body;
+  const { socialType, socialAuthId, socialToken } = req.body;
 
   let userInfo;
   if (socialType === "google") {
     userInfo = await verifyGoogleToken(socialAuthId);
   } else if (socialType === "facebook") {
-    userInfo = await verifyFacebookToken(socialAuthId);
+    userInfo = await verifyFacebookToken(socialToken);
   } else {
     throw new Error("Unsupported social type");
   }
 
-  const { email, firstName, lastName, socialToken } = userInfo;
+  const { email, firstName, lastName } = userInfo;
 
   // Check if email exists
   let user = await getByEmail(email);
