@@ -3,6 +3,7 @@ const router = express.Router();
 const userServices = require("../services/user.services");
 const Role = require("../helpers/role");
 const jwt = require("../helpers/jwt");
+const User = require("../models/user");
 //routes
 router.post("/login", login);
 router.post("/refresh-token", refreshToken);
@@ -31,6 +32,65 @@ function login(req, res, next) {
     .catch((error) => next(error));
 }
 
+async function socialLogin(req, res, next) {
+  try {
+    const { socialType, socialAuthId } = req.body;
+
+    let userInfo;
+    if (socialType === "google") {
+      userInfo = await userServices.verifyGoogleToken(socialAuthId);
+    } else if (socialType === "facebook") {
+      userInfo = await userServices.verifyFacebookToken(socialAuthId);
+    } else {
+      return res.status(400).json({ message: "Unsupported social type" });
+    }
+
+    const { email, firstName, lastName, socialToken } = userInfo;
+
+    // Check if email exists
+    let user = await userServices.getByEmail(email);
+
+    if (!user) {
+      // If email does not exist, create a new user
+      user = new User({
+        email,
+        firstName,
+        lastName,
+        socialType,
+        socialAuthId,
+        socialToken,
+        role: "User",
+      });
+      await user.save();
+    } else {
+      // If user exists, update the social tokens and other info
+      user.socialType = socialType;
+      user.socialAuthId = socialAuthId;
+      user.socialToken = socialToken;
+      await user.save();
+    }
+
+    // Generate tokens
+    const token = jwt.sign({ sub: user.id, role: user.role }, config.secret, {
+      expiresIn: "15m",
+    });
+    const refreshToken = jwt.sign(
+      { sub: user.id, role: user.role },
+      config.refreshSecret,
+      {
+        expiresIn: "7d",
+      }
+    );
+
+    return res.json({
+      user: { ...user.toJSON(), token, refreshToken },
+      message: "User logged in successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 function refreshToken(req, res, next) {
   userServices.refreshToken(req.body).then((user) => {
     try {
@@ -55,45 +115,6 @@ function register(req, res, next) {
       });
     })
     .catch((error) => next(error));
-}
-
-async function socialLogin(req, res, next) {
-  try {
-    const {
-      firstName,
-      lastName,
-      email,
-      socialType,
-      socialAuthId,
-      socialToken,
-    } = req.body;
-
-    // Check if email exists
-    const existingUser = await userServices.getByEmail(email);
-    if (existingUser) {
-      return res.status(400).json({ message: "Email is already registered" });
-    }
-
-    // Authenticate social credentials
-    const user = await userServices.socialLogin({
-      firstName,
-      lastName,
-      email,
-      socialType,
-      socialAuthId,
-      socialToken,
-    });
-    if (!user) {
-      return res.status(400).json({ message: "Social authentication failed" });
-    }
-
-    return res.json({
-      user,
-      message: "User logged in successfully",
-    });
-  } catch (error) {
-    next(error);
-  }
 }
 
 function getAll(req, res, next) {

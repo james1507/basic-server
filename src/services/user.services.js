@@ -2,7 +2,9 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 const config = require("../../config.json");
 const db = require("../helpers/db");
+const fetch = require("node-fetch");
 const User = db.User;
+const admin = require("../../firebase");
 
 //this will authenticate the user credentials
 async function login({ email, password }) {
@@ -28,52 +30,53 @@ async function login({ email, password }) {
   }
 }
 
-async function socialLogin({
-  firstName,
-  lastName,
-  email,
-  socialType,
-  socialAuthId,
-  socialToken,
-}) {
-  // Check if the email exists in the SocialUser collection
-  let socialUser = await User.findOne({ email });
+async function verifyGoogleToken(idToken) {
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    return {
+      email: decodedToken.email,
+      firstName: decodedToken.name,
+      lastName: decodedToken.name.split(" ").slice(1).join(" "),
+      socialType: "google",
+      socialAuthId: decodedToken.uid,
+      socialToken: idToken,
+    };
+  } catch (error) {
+    console.log("erorr: ", error);
 
-  if (!socialUser) {
-    // If email does not exist, create a new user
-    socialUser = new User({
-      firstName,
-      lastName,
-      email,
-      socialType,
-      socialAuthId,
-      socialToken,
-      role: "User",
-    });
-    await socialUser.save();
-  } else {
-    // If email exists, check if socialAuthId and socialToken match
-    if (
-      socialUser.socialAuthId !== socialAuthId ||
-      socialUser.socialToken !== socialToken
-    ) {
-      throw new Error("Social authentication failed. Please try again.");
-    }
+    throw new Error("Invalid Google ID token ", error);
+  }
+}
+
+async function verifyFacebookToken(accessToken) {
+  const appId = config.facebookAppId;
+  const appSecret = config.facebookAppSecret;
+
+  const debugTokenUrl = `https://graph.facebook.com/debug_token?input_token=${accessToken}&access_token=${appId}|${appSecret}`;
+  const response = await fetch(debugTokenUrl);
+  const data = await response.json();
+
+  if (!data.data || data.data.error || !data.data.is_valid) {
+    throw new Error("Invalid Facebook access token");
   }
 
-  // Generate tokens
-  const token = jwt.sign(
-    { sub: socialUser.id, role: socialUser.role },
-    config.secret,
-    { expiresIn: "15m" }
-  );
-  const refreshToken = jwt.sign(
-    { sub: socialUser.id, role: socialUser.role },
-    config.refreshSecret,
-    { expiresIn: "7d" }
-  );
+  const userId = data.data.user_id;
+  const userUrl = `https://graph.facebook.com/${userId}?fields=id,name,email&access_token=${accessToken}`;
+  const userResponse = await fetch(userUrl);
+  const userData = await userResponse.json();
 
-  return { ...socialUser.toJSON(), token, refreshToken };
+  if (!userData || userData.error) {
+    throw new Error("Unable to fetch user data from Facebook");
+  }
+
+  return {
+    email: userData.email,
+    firstName: userData.name.split(" ")[0],
+    lastName: userData.name.split(" ").slice(1).join(" "),
+    socialType: "facebook",
+    socialAuthId: userData.id,
+    socialToken: accessToken,
+  };
 }
 
 async function getByEmail(email) {
@@ -188,6 +191,7 @@ module.exports = {
   create,
   update,
   delete: _delete,
-  socialLogin,
+  verifyGoogleToken,
+  verifyFacebookToken,
   getByEmail,
 };
